@@ -1,0 +1,94 @@
+<!-- 
+ Sara Albaker:sma2284
+ Yuman Wang:yw4351
+ The core design concept of Mood Radio Todo is to blend emotional expression with task tracking through a minimal, music-sharing to-do list powered by Vue.js and Firebase. Users sign in, share songs that match their current mood, and manage those entries as personalized “mood todos.” The interface supports editing, deleting, and filtering (heard/unheard), while real-time synchronization with Firebase ensures seamless collaboration and persistence. By combining emotional self-reporting with structured task interaction, the app encourages reflection, mood awareness, and lightweight social sharing in a friendly digital space.
+-->
+
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Mood Radio Todo 🎧</title>
+  <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div id="app">
+    <div v-if="!user">
+      <h2>🎵 Sign In to Mood Radio</h2>
+      <form @submit.prevent="login">
+        <label>Email:</label>
+        <input type="email" v-model="email" required />
+
+        <label>Password:</label>
+        <input type="password" v-model="password" required />
+
+        <button type="submit">Log In</button>
+        <button type="button" @click="signUp">Sign Up</button>
+      </form>
+    </div>
+
+    <div v-else>
+      <h1>🎧 Mood Radio Todo</h1>
+      <p>Welcome, {{ user.email }} <button @click="logout">Logout</button></p>
+
+      <form @submit.prevent="addTodo">
+        <input v-model="newTodo.songName" placeholder="Song name" required />
+        <input v-model="newTodo.artist" placeholder="Artist" required />
+        <select v-model="newTodo.mood" required>
+          <option disabled value="">Select mood</option>
+          <option>Happy</option>
+          <option>Sad</option>
+          <option>Chill</option>
+          <option>Energetic</option>
+          <option>Angry</option>
+        </select>
+        <button type="submit">Add Song</button>
+      </form>
+
+      <div style="text-align:center;">
+        <button @click="filter = 'all'">All</button>
+        <button @click="filter = 'completed'">Heard</button>
+        <button @click="filter = 'active'">Unheard</button>
+      </div>
+
+      <ul>
+        <todo-item
+          v-for="todo in filteredTodos"
+          :key="todo.id"
+          :todo="todo"
+          @toggle-complete="toggleComplete"
+          @start-edit="startEdit"
+          @cancel-edit="cancelEdit"
+          @save-edit="saveTodo"
+          @delete-todo="deleteTodo"
+        ></todo-item>
+      </ul>
+    </div>
+  </div>
+
+  <!-- Child Component Template -->
+  <template id="todo-item-template">
+    <li>
+      <div v-if="!todo.editing">
+        <span :style="{ textDecoration: todo.isCompleted ? 'line-through' : 'none' }">
+          🎵 {{ todo.songName }} - {{ todo.artist }} ({{ todo.mood }})
+        </span>
+        <button @click="$emit('toggle-complete', todo)">
+          {{ todo.isCompleted ? 'Mark Unheard' : 'Mark Heard' }}
+        </button>
+        <button @click="$emit('start-edit', todo)">Edit</button>
+        <button @click="$emit('delete-todo', todo.id)">Delete</button>
+      </div>
+
+      <div v-else>
+        <input v-model="todo.editableSongName" />
+        <input v-model="todo.editableArtist" />
+        <input v-model="todo.editableMood" />
+        <button @click="$emit('save-edit', todo)">Save</button>
+        <button @click="$emit('cancel-edit', todo)">Cancel</button>
+      </div>
+    </li>
+  </template>
+</body>
+</html>
